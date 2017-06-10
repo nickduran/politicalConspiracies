@@ -16,15 +16,15 @@ The sequence of steps taken in R to generate the results reported in the manuscr
 
 ### Additional files
 
-Complete dataset: 
-
 * Mouse-Traj-1GIT.csv
 
-Helper functions for reporting analyses:
+    + Complete dataset
 
 * summary_stats.R
 
-### Files to be added
+    + Helper functions for reporting analyses
+
+### Files to be added (if needed)
 
  * R Code used to generate summary statistics and all descriptives
  * R Code used to generate all figures
