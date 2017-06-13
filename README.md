@@ -24,7 +24,7 @@ The sequence of steps taken in R to generate the results reported in the manuscr
 
     + Helper functions for reporting analyses
 
-### Files to be added (if needed)
+### Files to be added (depending on review process and requests)
 
  * R Code used to generate summary statistics and all descriptives
  * R Code used to generate all figures
