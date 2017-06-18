@@ -1,6 +1,6 @@
 # Revision JESP 
 
-### Response to AE on statistical model preparation and intepretation
+### Response to AE on statistical model preparation and interpretation
 
 The response provides rationale for the statistical analysis in the manuscript using R and R Markdown. Commented throughout. 
 
