@@ -4,7 +4,7 @@
 
 The response provides rationale for the statistical analysis in the manuscript using R and R Markdown. Commented throughout. 
 
-* http://dynamicog.org/poliConsp/LP-G_analysis_toAE.html
+* http://dynamicog.org/poliConsp/LP-G_analysis_toAE2.html
 
 ### Statistial analysis with results as reported in the manuscript 
 
