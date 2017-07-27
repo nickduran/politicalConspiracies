@@ -48,7 +48,7 @@ Similiar to .Rmd files provided above, but with output of all commands displayed
 
 > **Relevant Files:**
 > - http://dynamicog.org/poliConsp/analysis_latency.html
-> - http://dynamicog.org/poliConsp/analysis_deviation.html
+> - http://dynamicog.org/poliConsp/analysis_avgdeviat.html
 > - http://dynamicog.org/poliConsp/analysis_confidence.html
 
 R Code For Descriptives: 
