@@ -62,7 +62,7 @@ R Code used to generate summary statistics and reported descriptives.
 Misc: Response to Action Editor  
 ===================
 
-A response to the action editor in the review process that provides rationale and interpretation for the statistical analysis in the manuscript using R and R Markdown. Commented throughout.  
+A response to the action editor during the review process that provides rationale and interpretation for the statistical analysis in the manuscript using R and R Markdown. Commented throughout.  
 
 > **Relevant File:**
 > - http://dynamicog.org/poliConsp/AE_analysis.html
