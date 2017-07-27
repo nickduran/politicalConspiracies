@@ -31,13 +31,18 @@ R Analyses Code:
 ===================
 
 > **Relevant Files:**
-> - analysis_avgdeviat.Rmd, analysis_latency.Rmd, analysis_confidence.Rmd, summary_stats.R
+> - analysis_avgdeviat.Rmd 
+> - analysis_latency.Rmd
 
-1 and 2) For analysis_avgdeviat.Rmd and analysis_latency.Rmd, notebooks... runs the analyses described in the Mixed Effects Models section of paper, using data from synchronyMovementRapp.csv and synchronySpeechRapp.csv described above. The sequence of steps taken in R to generate the results reported in the manuscript for each of the three dependent variables (latency, average deviation, and confidence scores).
+For **analysis_avgdeviat.Rmd** and **analysis_latency.Rmd**, notebooks... runs the analyses described in the Mixed Effects Models section of paper, using data from synchronyMovementRapp.csv and synchronySpeechRapp.csv described above. The sequence of steps taken in R to generate the results reported in the manuscript for each of the three dependent variables (latency, average deviation, and confidence scores).
 
-3): 
+> - analysis_confidence.Rmd
 
-4): For summary_stats.R: Helper functions for reporting analyses
+For **analysis_confidence.Rmd**,
+
+> - summary_stats.R
+
+For **summary_stats.R**, a collection of helper function files called by the above analyses for reporting analyses.
 
 R Analyses Code (Executed):
 ===================
