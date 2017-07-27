@@ -1,4 +1,4 @@
-The Hidden Appeal of Political Conspiracies (Journal of Experimental and Social Psychology)
+Attraction and Resistance to Political Conspiracies as Revealed in Response Dynamics (Journal of Experimental and Social Psychology)
 ===================
 
 R Notebook tutorials of statistical procedures, including all R code, used to conduct analyses reported in Duran, Nicholson, and Dale (accepted, JESP). Also included is the complete dataset used to perform statistical tests and to derive descriptives. 
