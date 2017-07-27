@@ -7,25 +7,22 @@ Data (deidentified):
 ===================
 
 > **Relevant Files:**
-> - synchronyMovementRapp.csv
+> - Mouse-Traj-2GIT.csv
 
 1) File contains WLCC scores for each time lag, as well as rapport scores. Explanation for each column and codes:
-> - Column A: Real vs Virtual Pairs; 1 = Real, 2 = Virtual 
-> - Column B: Dyad number
-> - Colmnn C: Order of deceptive conversation; 2 = First, 3 = Second
-> - Column D: Did conversation involve deception or not; 0 = No Deception, 1 = Deception
-> - Column E: Did conversation involve conflict or not; 1 = Disagreement, 2 = Agreement
-> - Column F: Body region of Participant 1 analyzed: 1 = head/shoulders, 3 = mid-thigh/feet 
-> - Column G: Body region of Participant 2 analyzed: 1 = head/shoulders, 3 = mid-thigh/feet
-> - Column H: Sex
-> - Column I: Topic of conversation (varies across 10 possible topics)
-> - Column J: Average response between participants to question "I felt very close to my partner"
-> - Column K: Average response between participants to question "I felt that my partner understood what I was saying"
-> - Column L: Average response between participants to question "I felt that I understood what my partner was saying"
-> - Column M: Same as K, but absolute difference between participants
-> - Column N: Same as L, but absolute difference between participants
-> - Column O: Same as M, but absolute difference between participants
-> - Columns P-BX: lagged differences between participants' movements (at increments of 1/6 of a second up to 5000ms), values in each cell correspond to WLCC scores, positive lags correspond to DA following and negative lags correspond to Naive following 
+> - Column A: **subjnum**: Subject number 
+> - Column B: **age**: Age of subjects
+> - Column C: **sex**: 1 = male, 2 = female
+> - Colmnn D: trialnum: Order of trials 
+> - Column E: questionType: Numeric identification code given to each unique statement 
+> - Column F: resp_type: Was statement a general knowledge item (Gen Knowledge), Bush item (Left-wing), Obama item (Right-wing), or general conspiracy (Gen Conspiracy)?
+> - Column G: poliID2: Did participant identify as Republican or Democrat? 
+> - Column H: explicit: Was statement worded in Direct (Reject as False) or Indirect (Accept as True) terms?
+> - Column I: endorse: Was statement a general knowledge item (K), answered to endorse a conspiracy ("C"), answered to disavow a conspiracy (NC)
+> - Column J: condition: Was statement a general knowledge item (GEN) or critical item (CRIT; i.e., an item that involved an opportunity to answer as endorsing or disavowing a potential conspiracy)
+> - Column K: topic: Redundant with resp_type; Was statement a general knowledge item (GK), Bush item (BO), Obama item (BO), or general conspiracy item (GC)
+> - Column L: variable: dependent variables; choice = Likert-confidence score, tottm = total time, latency = latency time, avgdeviat = average deviation
+> - Column M: value: score for each of the variables
 
 R Analyses Code: 
 ===================
@@ -33,16 +30,13 @@ R Analyses Code:
 > **Relevant Files:**
 > - analysis_avgdeviat.Rmd 
 > - analysis_latency.Rmd
-
-For **analysis_avgdeviat.Rmd** and **analysis_latency.Rmd**, notebooks... runs the analyses described in the Mixed Effects Models section of paper, using data from synchronyMovementRapp.csv and synchronySpeechRapp.csv described above. The sequence of steps taken in R to generate the results reported in the manuscript for each of the three dependent variables (latency, average deviation, and confidence scores).
-
 > - analysis_confidence.Rmd
 
-For **analysis_confidence.Rmd**,
+For **analysis_avgdeviat.Rmd** and **analysis_latency.Rmd**, the sequence of steps in R to generate the linear mixed effects models reported in manuscript for the average deviation, latency, and confidence variables, using data from Mouse-Traj-2GIT.csv described above. Allows for complete replication.
 
 > - summary_stats.R
 
-For **summary_stats.R**, a collection of helper function files called by the above analyses for reporting analyses.
+For **summary_stats.R**, a collection of helper function files used in the above code for reporting analyses.
 
 R Analyses Code (Executed):
 ===================
@@ -53,22 +47,23 @@ R Analyses Code (Executed):
 > - http://dynamicog.org/poliConsp/analysis_deviation.html
 > - http://dynamicog.org/poliConsp/analysis_confidence.html
 
+Similiar to .Rmd files provided above, but with output generation of all commands. Output corresponds to data reported in the manuscript. 
+
 R Code For Descriptives: 
 ===================
 
 > **Relevant Files:**
 > - responseTrends.Rmd
 
-R Code used to generate summary statistics and all descriptives
+R Code used to generate summary statistics and reported descriptives. 
 
 Misc: Response to Action Editor  
 ===================
 
 > **Relevant Files:**
-> - AE_analysis.Rmd
 > - http://dynamicog.org/poliConsp/AE_analysis.html
 
-The response provides rationale and interpretation for the statistical analysis in the manuscript using R and R Markdown. Commented throughout.  
+A response to the action editor in the review process that provides rationale and interpretation for the statistical analysis in the manuscript using R and R Markdown. Commented throughout.  
 
 
 
