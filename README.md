@@ -27,7 +27,7 @@ Explanation for each column and codes:
 > - Column L: **variable**: dependent variables; choice = Likert-confidence score, tottm = total time, latency = latency time, avgdeviat = average deviation
 > - Column M: **value**: score for each of the variables
 
-R Analyses Code: 
+R Analysis Code: 
 ===================
 
 Each file contains the sequence of steps in R to generate the linear mixed effects models reported in manuscript for the average deviation, latency, and confidence variables, using data from Mouse-Traj-2GIT.csv described above. Allows for complete replication.
@@ -41,7 +41,7 @@ A collection of helper function files used in the above code for reporting analy
 
 > - summary_stats.R
 
-R Analyses Code (Executed):
+R Analysis Code (Executed):
 ===================
 
 Similiar to .Rmd files provided above, but with output of all commands displayed to correspond with data reported in the manuscript. 
