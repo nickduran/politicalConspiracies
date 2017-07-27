@@ -1,0 +1,524 @@
+---
+title: "Political Conspiracies - Average Deviation"
+author: "Nick Duran"
+date: 05/30/17
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+library(dplyr) ##// generate descriptives 
+library(lme4) ##// generate mixed effects models
+library(multcomp) ##// glht, allows multiple comparisons in unibus models, standardized method for computing p 
+library(MuMIn) ##// compute effect sizes
+library(pander)
+
+source("summary_stats.r")
+
+```
+
+# NONBELIEF SUBSET - BETWEEN PARTISAN
+
+For this analysis, an omnibus statistical model was built to explore the three-way interaction between political party (Republican = 0.5, Democrat = -0.5), statement directness (Direct = 0.5, Indirect = -0.5), and statement types, with the latter coded as planned contrasts that compare how disavowed political conspiracy statements (“Obama” or “Bush”) were answered relative to: a) each other (Obama = 0.5, Bush = -0.5), b) general political knowledge (“GK”) as control baseline (Obama or Bush = 0.5, GK = -0.5), and c) disavowed general conspiracies (“GC”) as control baseline (Obama or Bush = 0.5, GC = -0.5). 
+
+## Preliminaries
+
+```{r}
+#### Read Data ####
+fromprep = read.delim("/Users/nduran/Dropbox (ASU)/POLIBELIEFS/analysis/JESP/REDO/3_Ranalysis/Mouse-Traj-2GIT.csv", header = TRUE,sep=',')
+```
+
+**Recoding:**
+
+```{r}
+fromprep <- within( fromprep, {
+    group.id <- subjnum ## subject number
+    item.id <- questionType ## item code
+    dependent.variable <- value ## action dynamic response variables
+
+    ## Factor 1: Identification as Republican or Democrat (2-levels; between-subject)
+    political.identity <- poliID2
+    
+    ## Factor 2: Wording of item direct or indirect (2-levels; within-subject)
+    statement.direct <- explicit 
+    
+    ## Factor 3: Item conspiracy about Bush, Obama, or general, or a general knowledge (4-levels; within-subject)
+    BO.GB.GK.GC <- resp_type 
+    condition <- ifelse( BO.GB.GK.GC=="Gen Conspiracy", "Gen Conspiracy",
+                 ifelse( BO.GB.GK.GC=="Right-wing", "Obama",
+                 ifelse( BO.GB.GK.GC=="Left-wing", "Bush",
+                 ifelse( BO.GB.GK.GC=="Gen Knowledge", "Gen Knowledge", NA )) ) )  
+    
+} )
+
+c_scale <- function(x) {
+    scale(x, scale = FALSE) }
+fromprep <- within( fromprep, age.c <- c_scale(fromprep$age) )
+
+```
+
+**Descriptives of main variables:**
+
+```{r echo=FALSE}
+fromprep2 = subset( fromprep, endorse!="C" & variable=="avgdeviat")
+summt = dplyr::summarize(group_by(fromprep2,statement.direct,political.identity,condition),
+                         mean=mean(value), se=sd(value)/sqrt(length(value)))
+pander(summt)
+
+```
+
+**Contrast structure:**
+
+```{r}
+nonbelief.data <- within( subset( fromprep, endorse!="C" ), {
+    
+    ## for doing follow-up simple effects analyses if three-way is significant
+    Reject.as.False <- ifelse( statement.direct=="Reject as False", 0, 
+                       ifelse( statement.direct=="Accept as True",  1, NA ) )   
+    
+    ## for doing follow-up simple effects analyses if three-way is significant
+    Accept.as.True <- ifelse( statement.direct=="Reject as False", 1, 
+                      ifelse( statement.direct=="Accept as True",  0, NA ) )       
+    
+    political.identity.b <- ifelse( political.identity=="Democrat", -1/2, 
+                            ifelse( political.identity=="Republican", 1/2, NA ) ) 
+    
+    statement.direct.w <- ifelse( statement.direct=="Reject as False", 1/2, 
+                          ifelse( statement.direct=="Accept as True",  -1/2, NA ) )   
+    
+    ObamaVsKnowledge <- ifelse( condition=="Bush", 0,
+                        ifelse( condition=="Obama", 1/2,
+                        ifelse( condition=="Gen Conspiracy", 0,
+                        ifelse( condition=="Gen Knowledge", -1/2, NA ))))
+    
+    BushVsKnowledge <- ifelse( condition=="Bush", 1/2,
+                       ifelse( condition=="Obama", 0,
+                       ifelse( condition=="Gen Conspiracy", 0,
+                       ifelse( condition=="Gen Knowledge", -1/2, NA ))))
+    
+    GeneralVsKnowledge <- ifelse( condition=="Bush", 0,
+                          ifelse( condition=="Obama", 0,
+                          ifelse( condition=="Gen Conspiracy", 1/2,
+                          ifelse( condition=="Gen Knowledge", -1/2, NA ))))
+    
+} )
+
+```
+
+## Statistical Models
+
+```{r message=FALSE}
+omnibus.nonbeliever.model <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + political.identity.b * statement.direct.w * (ObamaVsKnowledge + BushVsKnowledge + GeneralVsKnowledge), data=nonbelief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+```
+```{r echo=FALSE}
+df1 = data.frame(summary(omnibus.nonbeliever.model)$coefficients)
+# pander(df1[1])
+df1[1]
+```
+```{r echo=FALSE}
+##// Effect Size
+r.squaredGLMM(omnibus.nonbeliever.model)[2]
+```
+
+**Test for relevant two-way interaction:**
+
+```{r message=FALSE}
+twoway.nonbeliever.model = update(omnibus.nonbeliever.model,.~.-political.identity.b:ObamaVsKnowledge-political.identity.b:BushVsKnowledge-political.identity.b:GeneralVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(omnibus.nonbeliever.model,twoway.nonbeliever.model,"twoway.nonbeliever.model")
+
+```
+
+**Test for relevant three-way interaction:**
+
+```{r message=FALSE}
+threeway.nonbeliever.model = update(omnibus.nonbeliever.model,.~.-political.identity.b:statement.direct.w:ObamaVsKnowledge-political.identity.b:statement.direct.w:BushVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(omnibus.nonbeliever.model,threeway.nonbeliever.model,"threeway.nonbeliever.model")
+```
+
+**Interpreting the omnibus coefficients:**
+
+```{r}
+    planCont = rbind(
+        # note that "Bush" becomes the new baseline; Obama vs. Bush
+        "RQ1.2way" = c(0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0), 
+        # Obama vs. GK
+        "RQ2.2way" = c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0), 
+        # Bush vs. GK
+        "RQ3.2way" = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), 
+        # note that GC becomes the new baseline; Obama vs. GC
+        "RQ4.2way" = c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0), 
+        # note that GC becomes the new baseline; Bush vs. GC
+        "RQ5.2way" = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0))   
+
+        # # Obama vs. Bush vs. directness
+        # "RQ1.3way" = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -1),
+        # # Obama vs. GK vs. directness
+        # "RQ2.3way" = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0),
+        # # Bush vs. GK vs. directness
+        # "RQ3.3way" = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1))
+
+```
+```{r echo=FALSE}
+runContrasts(omnibus.nonbeliever.model, planCont, "nonbelief")
+```
+
+<!-- **Simple effects follow-up (assuming sig 3-way):** -->
+
+<!-- Important note: "You only pay attention to effects in the following models that do NOT interact with the dummy codes (i.e., ignore any fixed effect that includes "Reject.as.False" or "Accept.as.True," whether it is an interaction or main effect)" -->
+
+```{r message=FALSE, echo=FALSE, eval=FALSE}
+##// Reject as False
+raf.omnibus.nonbeliever <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + political.identity.b * Reject.as.False * (ObamaVsKnowledge + BushVsKnowledge), data=nonbelief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+
+##// test for two-way interaction in order to follow-up
+raf.nonbeliever = update( raf.omnibus.nonbeliever, .~.-political.identity.b:ObamaVsKnowledge-political.identity.b:BushVsKnowledge)
+```
+```{r echo=FALSE, eval=FALSE}
+# modComp(raf.nonbeliever,raf.omnibus.nonbeliever,"rejectasfalse.nonbeliever.model")
+```
+```{r echo=FALSE, eval=FALSE}
+df1 = data.frame(summary(raf.omnibus.nonbeliever)$coefficients)
+df1[1]
+```
+```{r echo=FALSE, eval=FALSE}
+    planCont = rbind(
+        # testing "political.identity.b:ObamaVsKnowledge" vs. "political.identity.b:BushVsKnowledge"
+        "PI:OvB" = c(0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0),        
+        # testing "political.identity.b:ObamaVsKnowledge"
+        "PI:OvK" = c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), 
+        # testing "political.identity.b:BushVsKnowledge"
+        "PI:BvK" = c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)) 
+
+```
+```{r echo=FALSE, eval=FALSE}
+runContrasts(raf.omnibus.nonbeliever, planCont, "rejectasfalse/nonbelief")
+```
+
+
+```{r message=FALSE, echo=FALSE, eval=FALSE}
+##// Accept as True
+aat.omnibus.nonbeliever <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + political.identity.b * Accept.as.True * (ObamaVsKnowledge + BushVsKnowledge), data=nonbelief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+
+##// test for two-way interaction in order to follow-up
+aat.nonbeliever = update( aat.omnibus.nonbeliever, .~.-political.identity.b:ObamaVsKnowledge-political.identity.b:BushVsKnowledge)
+```
+```{r echo=FALSE, eval=FALSE}
+modComp(aat.nonbeliever,aat.omnibus.nonbeliever,"acceptastrue.nonbeliever.model")
+```
+```{r echo=FALSE, eval=FALSE}
+df1 = data.frame(summary(aat.omnibus.nonbeliever)$coefficients)
+df1[1]
+```
+```{r echo=FALSE, eval=FALSE}
+    planCont = rbind(
+        # testing "political.identity.b:ObamaVsKnowledge" vs. "political.identity.b:BushVsKnowledge"
+        "PI:OvB" = c(0, 0, 0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0),        
+        # testing "political.identity.b:ObamaVsKnowledge"
+        "PI:OvK" = c(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0), 
+        # testing "political.identity.b:BushVsKnowledge"
+        "PI:BvK" = c(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0)) 
+
+```
+```{r echo=FALSE, eval=FALSE}
+runContrasts(aat.omnibus.nonbeliever, planCont, "acceptastrue/nonbelief")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# NONBELIEF SUBSET - WITHIN PARTISAN
+
+We continue to examine nonbelief responses using the same omnibus model as above, but rather than comparing relative differences between Republicans and Democrats, the goal here is to evaluate how partisans answer political conspiracies (relative to baseline statements) as a self-contained ideological group. Accordingly, the interaction term with political party is removed and replaced with a dummy-coded variable that allows Republicans and Democrats to be evaluated separately, with a focus on the main effect of statement types as a series of planned contrasts, and their interaction with statement directness. 
+
+
+```{r}
+nonbelief.data <- within( subset( nonbelief.data, endorse!="C" ), {
+    
+    ## for within subjects analysis
+    republican <- ifelse( poliID2=="Republican", 0, 
+                  ifelse( poliID2=="Democrat", 1, NA ) ) 
+    
+    ## for within subjects analysis
+    democrat <- ifelse( poliID2=="Democrat", 0, 
+                ifelse( poliID2=="Republican", 1, NA ) )     
+    
+} )
+```
+
+## Statistical Models
+
+**Republicans**
+
+<!-- Important note: "You only pay attention to effects in the following models that do NOT interact with the dummy codes (i.e., ignore any fixed effect that includes "republican" or "democrat," whether it is an interaction or main effect)" -->
+
+```{r message=FALSE}
+republican.omnibus.nonbeliever.model <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + statement.direct.w * republican * (ObamaVsKnowledge + BushVsKnowledge + GeneralVsKnowledge), data=nonbelief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+```
+```{r echo=FALSE}
+df1 = data.frame(summary(republican.omnibus.nonbeliever.model)$coefficients)
+df1[1]
+```
+```{r echo=FALSE}
+##// Effect Size # should be the same as omnibus
+# r.squaredGLMM(republican.omnibus.nonbeliever.model)[2]
+```
+
+```{r message=FALSE}
+##// test for main effect in order to follow-up
+republican.nonbeliever.main = update( republican.omnibus.nonbeliever.model, .~.-ObamaVsKnowledge-BushVsKnowledge-GeneralVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(republican.nonbeliever.main,republican.omnibus.nonbeliever.model,"republican.nonbeliever.main")
+```
+```{r}
+    planCont = rbind(
+        # note that "Bush" items become the new baseline
+        "OvB" =  c(0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        
+        "OvK" =  c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        "BvK" =  c(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        
+        # note that "General Conspiracy" items become the new baseline
+        "OvGC" = c(0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0),  
+        "BvGC" = c(0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0))
+        
+        # note that "General Conspiracy" items become the new baseline
+        # "OvB:Direct" = c(0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 1, -1),  
+        # "OvK:Direct" = c(0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 1, 0),
+        # "BvK:Direct" = c(0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 1))
+
+
+```
+```{r echo=FALSE}
+runContrasts(republican.omnibus.nonbeliever.model, planCont, "republican/nonbelief")
+```
+
+```{r message=FALSE}
+##// test for two-way interaction in order to follow-up
+republican.nonbeliever.twoway = update( republican.omnibus.nonbeliever.model, .~.-statement.direct.w:ObamaVsKnowledge-statement.direct.w:BushVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(republican.nonbeliever.twoway,republican.omnibus.nonbeliever.model,"republican.nonbeliever.twoway")
+```
+
+
+**Democrats**
+
+<!-- Important note: "You only pay attention to effects in the following models that do NOT interact with the dummy codes (i.e., ignore any fixed effect that includes "republican" or "democrat," whether it is an interaction or main effect)" -->
+
+```{r message=FALSE}
+democrat.omnibus.nonbeliever.model <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + statement.direct.w * democrat * (ObamaVsKnowledge + BushVsKnowledge + GeneralVsKnowledge), data=nonbelief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+```
+```{r echo=FALSE}
+df1 = data.frame(summary(democrat.omnibus.nonbeliever.model)$coefficients)
+df1[1]
+```
+```{r echo=FALSE}
+##// Effect Size
+# r.squaredGLMM(democrat.omnibus.nonbeliever.model)[2]
+```
+
+```{r message=FALSE}
+##// test for main effect in order to follow-up
+democrat.nonbeliever.main = update( democrat.omnibus.nonbeliever.model, .~.-ObamaVsKnowledge-BushVsKnowledge-GeneralVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(democrat.nonbeliever.main,democrat.omnibus.nonbeliever.model,"democrat.nonbeliever.main")
+```
+```{r eval=FALSE, echo=FALSE}
+    planCont = rbind(
+        # note that "Bush" items become the new baseline
+        "OvB" =  c(0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        
+        "OvK" =  c(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        "BvK" =  c(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0), 
+        
+        # note that "General Conspiracy" items become the new baseline
+        "OvGC" = c(0, 0, 0, 0, 1, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0),  
+        "BvGC" = c(0, 0, 0, 0, 0, 1, -1, 0, 0, 0, 0, 0, 0, 0, 0))
+
+```
+```{r eval=FALSE, echo=FALSE}
+runContrasts(democrat.omnibus.nonbeliever.model, planCont, "democrat/nonbelief")
+```
+
+```{r message=FALSE}
+##// test for two-way interaction in order to follow-up
+democrat.nonbeliever.twoway = update( democrat.omnibus.nonbeliever.model, .~.-statement.direct.w:ObamaVsKnowledge-statement.direct.w:BushVsKnowledge)
+```
+```{r echo=FALSE}
+modComp(democrat.nonbeliever.twoway,democrat.omnibus.nonbeliever.model,"democrat.nonbeliever.twoway")
+```
+
+<!-- Add the planned contrast structure here for the two-way coefficients, assuming overall is significant -->
+
+
+
+
+
+
+
+
+
+
+
+# BELIEF SUBSET - WITHIN PARTISAN
+
+For this final analysis, we now examine belief responses for Republicans and Democrats as separate groups (within groups analysis). The main research question is concerned with whether participants show accuracy/self-presentation biases when endorsing party concordant political conspiracies; for Republicans, these are unique to Obama political conspiracies, for Democrats, these are unique to Bush political conspiracies. Changes in initial latency and average deviation for these items were assessed relative to how participants responded to general political knowledge items as a baseline. 
+
+## Preliminaries
+
+**Recoding:**
+
+```{r}
+#### Read Data ####
+fromprep = read.delim("/Users/nduran/Dropbox (ASU)/POLIBELIEFS/analysis/JESP/REDO/3_Ranalysis/Mouse-Traj-1GIT.csv", header = TRUE,sep=',')
+```
+
+<!-- Also, remember that the "Accept As True" statements are now the "directly stated" items, and the "Reject as False" are the "indirectly stated." -->
+
+```{r}
+fromprep <- within( fromprep, {
+
+    group.id <- subjnum ## subject number
+    item.id <- questionType ## item code
+    dependent.variable <- value ## action dynamic response variables
+    
+    ## Factor 1: Wording of item direct or indirect (2-levels; within-subject)
+    statement.direct <- explicit 
+    
+    ## Factor 2: Item conspiracy about Bush, Obama, or general, or a general knowledge (4-levels; within-subject) 
+    BO.GB.GK.GC <- resp_type    
+    condition.belief <- ifelse( BO.GB.GK.GC=="Gen Conspiracy", "Gen Conspiracy", 
+                        ifelse( BO.GB.GK.GC=="Right-wing" & poliID2=="Republican", "Party Concordant",
+                        ifelse( BO.GB.GK.GC=="Left-wing" & poliID2=="Democrat", "Party Concordant",
+                        ifelse( BO.GB.GK.GC=="Right-wing" & poliID2=="Democrat", "Party Discordant",
+                        ifelse( BO.GB.GK.GC=="Left-wing" & poliID2=="Republican", "Party Discordant",
+                        ifelse( BO.GB.GK.GC=="Gen Knowledge", "Gen Knowledge", NA )))) ) )
+    
+} )
+
+c_scale <- function(x) {
+    scale(x, scale = FALSE) }
+fromprep <- within( fromprep, age.c <- c_scale(fromprep$age) )
+
+```
+
+**Contrast structure:**
+
+```{r}
+belief.data <- within( subset( fromprep, endorse!="NC" ), {
+    
+    ## for within subjects analysis
+    republican <- ifelse( poliID2=="Republican", 0, 
+                  ifelse( poliID2=="Democrat", 1, NA ) ) 
+    
+    ## for within subjects analysis
+    democrat <- ifelse( poliID2=="Democrat", 0, 
+                ifelse( poliID2=="Republican", 1, NA ) )       
+    
+    statement.direct.w <- ifelse( statement.direct=="Reject as False", 1/2, 
+                          ifelse( statement.direct=="Accept as True",  -1/2, NA ) )   
+    
+    noGCPD.PartyVsKnowledge <- ifelse( condition.belief=="Party Concordant", 1/2,
+                               ifelse( condition.belief=="Party Discordant", NA,
+                               ifelse( condition.belief=="Gen Conspiracy", NA, 
+                               ifelse( condition.belief=="Gen Knowledge", -1/2, NA ))))
+} )
+```
+
+## Statistical Models
+
+**Republicans**
+
+**Descriptives of main variables:**
+
+```{r echo=FALSE}
+fromprep2 = subset( fromprep, endorse!="NC" & variable=="avgdeviat" & poliID2=="Republican")
+summt = dplyr::summarize(group_by(fromprep2,statement.direct,condition.belief),
+                         mean=mean(value), se=sd(value)/sqrt(length(value)))
+pander(summt)
+```
+
+<!-- Important note: "You only pay attention to effects in the following models that do NOT interact with the dummy codes (i.e., ignore any fixed effect that includes "republican" or "democrat," whether it is an interaction or main effect)" -->
+
+```{r}
+republican.omnibus.believer.model <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + statement.direct.w * republican * (noGCPD.PartyVsKnowledge), data=belief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+```
+```{r echo=FALSE}
+df1 = data.frame(summary(republican.omnibus.believer.model)$coefficients)
+df1[1]
+```
+```{r echo=FALSE}
+r.squaredGLMM(republican.omnibus.believer.model)[2]
+```
+
+```{r}
+    planCont = rbind(
+        # testing "noGCPD.PartyVsKnowledge"
+        "RQ1" = c(0, 0, 0, 0, 1, 0, 0, 0, 0),
+        # testing "statement.direct.w:noGCPD.PartyVsKnowledge"
+        "RQ1.2way" = c(0, 0, 0, 0, 0, 0, 1, 0, 0))
+```
+```{r echo=FALSE}
+runContrasts(republican.omnibus.believer.model, planCont, "Republican/belief")
+```
+
+**Democrats**
+
+**Descriptives of main variables:**
+
+```{r echo=FALSE}
+fromprep2 = subset( fromprep, endorse!="NC" & variable=="avgdeviat" & poliID2=="Democrat")
+summt = dplyr::summarize(group_by(fromprep2,statement.direct,condition.belief),
+                         mean=mean(value), se=sd(value)/sqrt(length(value)))
+pander(summt)
+```
+
+```{r}
+democrat.omnibus.believer.model <- lmer( dependent.variable ~ (1|group.id) + (1|item.id) + age.c + statement.direct.w * democrat * (noGCPD.PartyVsKnowledge), data=belief.data, REML=FALSE, na.action = na.exclude, subset=variable=="avgdeviat" )
+```
+```{r echo=FALSE}
+df1 = data.frame(summary(democrat.omnibus.believer.model)$coefficients)
+df1[1]
+```
+```{r echo=FALSE}
+r.squaredGLMM(democrat.omnibus.believer.model)[2]
+```
+
+```{r}
+    planCont = rbind(
+        # testing "noGCPD.PartyVsKnowledge"
+        "RQ2" = c(0, 0, 0, 0, 1, 0, 0, 0, 0),
+        # testing "statement.direct.w:noGCPD.PartyVsKnowledge"
+        "RQ2.2way" = c(0, 0, 0, 0, 0, 0, 1, 0, 0))
+```
+```{r echo=FALSE}
+runContrasts(democrat.omnibus.believer.model, planCont, "Democrat/belief")
+```
+
+
+
+
+
+
+

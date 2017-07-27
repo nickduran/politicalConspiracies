@@ -1,0 +1,336 @@
+---
+title: "Response Trends"
+author: "Nick Duran"
+date: 05/31/17
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+rm(list=ls())
+
+library(dplyr)
+library(dtplyr) 
+library(plyr)
+library(reshape2) 
+
+```
+
+## Preliminaries
+
+```{r}
+#### Read Data ####
+d2 = read.delim("/Users/nduran/Dropbox (ASU)/POLIBELIEFS/analysis/JESP/REDO/3_Ranalysis/Mouse-Traj-2GIT.csv", header = TRUE,sep=',')
+d2 <- tbl_df(d2)
+```
+
+## SUBJECT LEVEL
+
+```{r}
+
+print("How many Republicans?")
+totREP = length(unique(filter(d2,poliID2 == "Republican")$subjnum))
+totREP
+
+print("How many Democrats?")
+totDEM = length(unique(filter(d2,poliID2 == "Democrat")$subjnum))
+totDEM
+
+print("How many just Republicans and Democrats TOTAL?")
+length(unique(filter(d2,poliID2 == "Republican" | poliID2 == "Democrat")$subjnum))
+
+print("Proportion of Republicans")
+length(unique(filter(d2,poliID2 == "Republican")$subjnum))/length(unique(filter(d2,poliID2 == "Republican" | poliID2 == "Democrat")$subjnum))*100 
+
+print("Proportion of Democrats")
+length(unique(filter(d2,poliID2 == "Democrat")$subjnum))/length(unique(filter(d2,poliID2 == "Republican" | poliID2 == "Democrat")$subjnum))*100
+
+```
+
+### Nonbelief 
+
+#### Republicans
+
+```{r}
+
+print("How many Republicans REJECTED ALL political conspiracies?")
+repNPC = totREP - length(unique(filter(d2,condition=="CRIT" & (topic == "GB" | topic == "BO") & (endorse == "C") & poliID2 == "Republican")$subjnum))
+repNPC
+repNPC/totREP*100
+
+print("How many Republicans REJECTED ALL general conspiracy theories?")
+repNGC = totREP - length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "C") & poliID2 == "Republican")$subjnum))
+repNGC
+repNGC/totREP*100
+
+print("How many Republicans REJECTED AT LEAST ONE political conspiracy CONCORDANT (OBAMA) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & (endorse == "NC") & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & (endorse == "NC") & poliID2 == "Republican")$subjnum))/totREP*100
+
+print("How many Republicans REJECTED AT LEAST ONE political conspiracy DISCONCORDANT (BUSH) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & (endorse == "NC") & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & (endorse == "NC") & poliID2 == "Republican")$subjnum))/totREP*100
+
+print("How many Republicans REJECTED AT LEAST ONE general conspiracy theory?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "NC") & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "NC") & poliID2 == "Republican")$subjnum))/totREP*100
+
+
+```
+
+#### Democrats
+
+```{r}
+print("How many Democrats REJECTED ALL political conspiracies?")
+demNPC = totDEM -length(unique(filter(d2,condition=="CRIT" & (topic == "GB" | topic == "BO") & (endorse == "C") & poliID2 == "Democrat")$subjnum))
+demNPC
+demNPC/totDEM*100
+
+print("How many Democrats REJECTED ALL general conspiracy theories?")
+demNGC = totDEM - length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "C") & poliID2 == "Democrat")$subjnum))
+demNGC
+demNGC/totDEM*100
+
+print("How many Democrats REJECTED AT LEAST ONE political conspiracy CONCORDANT (BUSH) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+print("How many Democrats REJECTED AT LEAST ONE political conspiracy DISCONCORDANT (OBAMA) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+print("How many Democrats REJECTED AT LEAST ONE general conspiracy theory?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & (endorse == "NC") & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+```
+
+### Belief 
+
+#### Republicans
+
+```{r}
+
+print("How many Republicans ACCEPTED AT LEAST ONE political conspiracy CONCORDANT (OBAMA) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican")$subjnum))/totREP*100
+
+print("How many Republicans ACCEPTED AT LEAST ONE political conspiracy DISCONCORDANT (BUSH) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican")$subjnum))/totREP*100
+
+print("how many Republicans confirmed at least one general conspiracy?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Republican")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Republican")$subjnum))/totREP*100
+
+```
+
+#### Democrats
+
+```{r}
+
+print("How many Democrats ACCEPTED AT LEAST ONE political conspiracy CONCORDANT (BUSH) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+print("How many Democrats ACCEPTED AT LEAST ONE political conspiracy DISCONCORDANT (OBAMA) with their own party?")
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+print("how many Democrats confirmed at least one general conspiracy?")
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Democrat")$subjnum))
+length(unique(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Democrat")$subjnum))/totDEM*100
+
+```
+
+## ITEM LEVEL
+
+### Nonbelief 
+
+#### Republicans
+
+```{r}
+print("how many party-concordant political conspiracy theory items (OBAMA) were there for Republicans?")
+ConcREP = nrow(filter(d2,condition=="CRIT" & topic == "BO" & poliID2 == "Republican"))
+ConcREP
+
+print("how many party-discordant political conspiracy theory items (BUSH) were there for Republicans?")
+DisREP = nrow(filter(d2,condition=="CRIT" & topic == "GB" & poliID2 == "Republican"))
+DisREP
+
+print("how many general conspiracy items were there for Republicans?")
+GCREP = nrow(filter(d2,condition=="CRIT" & topic == "GC" & poliID2 == "Republican"))
+GCREP
+
+print("*********")
+
+print("how many of all critical items involving party concordant (OBAMA) were REJECTED, AS DIRECT (FALSE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican" & explicit == "Reject as False"))/ConcREP*100
+
+print("how many of all critical items involving party concordant (OBAMA) were REJECTED, AS INDIRECT (TRUE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican" & explicit == "Accept as True"))/ConcREP*100
+
+print("how many of all critical items involving party concordant (OBAMA) were REJECTED, either DIRECT OR INDIRECT BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Republican"))/ConcREP*100
+
+print("*********")
+
+print("how many of all critical items involving party discordant (BUSH) were REJECTED, AS DIRECT (FALSE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican" & explicit == "Reject as False"))/DisREP*100
+
+print("how many of all critical items involving party discordant (BUSH) were REJECTED, AS INDIRECT (TRUE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican" & explicit == "Accept as True"))/DisREP*100
+
+print("how many of all critical items involving party discordant (BUSH) were REJECTED, either DIRECT OR INDIRECT BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Republican"))/DisREP*100
+
+print("*********")
+
+print("how many of these general conspiracy items were REJECTED by Republicans?")
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "NC" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "NC" & poliID2 == "Republican"))/GCREP*100
+
+
+```
+
+#### Democrats
+
+```{r}
+
+print("how many party-concordant political conspiracy theory items (BUSH) were there for Democrats?")
+ConcDEM = nrow(filter(d2,condition=="CRIT" & topic == "GB" & (endorse == "NC" | endorse == "C") & poliID2 == "Democrat"))
+ConcDEM
+
+print("how many party-discordant political conspiracy theory items (OBAMA) were there for Democrats?")
+DisDEM = nrow(filter(d2,condition=="CRIT" & topic == "BO" & (endorse == "NC" | endorse == "C") & poliID2 == "Democrat"))
+DisDEM
+
+print("how many general conspiracy items were there for Democrats?")
+GCDEM = nrow(filter(d2,condition=="CRIT" & topic == "GC" & poliID2 == "Democrat"))
+GCDEM
+
+print("*********")
+
+print("how many of all critical items involving party concordant (BUSH) were REJECTED, AS DIRECT (FALSE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Reject as False"))/ConcDEM*100
+
+print("how many of all critical items involving party concordant (BUSH) were REJECTED, AS INDIRECT (TRUE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Accept as True"))/ConcDEM*100
+
+print("how many of all critical items involving party concordant (BUSH) were REJECTED, either DIRECT OR INDIRECT BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "NC" & poliID2 == "Democrat"))/ConcDEM*100
+
+print("*********")
+
+print("how many of all critical items involving party discordant (OBAMA) were REJECTED, AS DIRECT (FALSE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Reject as False"))/DisDEM*100
+
+print("how many of all critical items involving party discordant (OBAMA) were REJECTED, AS INDIRECT (TRUE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat" & explicit == "Accept as True"))/DisDEM*100
+
+print("how many of all critical items involving party discordant (OBAMA) were REJECTED, either DIRECT OR INDIRECT BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "NC" & poliID2 == "Democrat"))/DisDEM*100
+
+print("*********")
+
+print("how many of these general conspiracy items were REJECTED by Democrats?")
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "NC" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "NC" & poliID2 == "Democrat"))/GCDEM*100
+
+```
+
+### Belief 
+
+Note the complication here that for the belief.data subset, the Direct statments are now the "accept as true" and Indirect are "reject as false"
+
+#### Republicans
+
+```{r}
+
+print("how many of all critical items involving party concordant (OBAMA) were ACCEPTED, AS DIRECT (TRUE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican" & explicit == "Accept as True"))/ConcREP*100
+
+print("how many of all critical items involving party concordant (OBAMA) were ACCEPTED, AS INDIRECT (FALSE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican" & explicit == "Reject as False"))/ConcREP*100
+
+print("how many of all critical items involving party concordant (OBAMA) were ACCEPTED, either DIRECT OR INDIRECT BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Republican"))/ConcREP*100
+
+print("*********")
+
+print("how many of all critical items involving party discordant (BUSH) were ACCEPTED, AS DIRECT (TRUE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican" & explicit == "Accept as True"))/DisREP*100
+
+print("how many of all critical items involving party discordant (BUSH) were ACCEPTED, AS INDIRECT (FALSE) BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican" & explicit == "Reject as False"))/DisREP*100
+
+print("how many of all critical items involving party discordant (BUSH) were ACCEPTED, either DIRECT OR INDIRECT BY REPUBLICANS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Republican"))/DisREP*100
+
+print("*********")
+
+print("how many of these general conspiracy items were ACCEPTED by Republicans?")
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Republican"))
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Republican"))/GCREP*100
+
+```
+
+#### Democrats
+
+```{r}
+
+print("how many of all critical items involving party concordant (BUSH) were ACCEPTED, AS DIRECT (TRUE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat" & explicit == "Accept as True"))/ConcDEM*100
+
+print("how many of all critical items involving party concordant (BUSH) were ACCEPTED, AS INDIRECT (FALSE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat" & explicit == "Reject as False"))/ConcDEM*100
+
+print("how many of all critical items involving party concordant (BUSH) were ACCEPTED, either DIRECT OR INDIRECT BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "GB" & endorse == "C" & poliID2 == "Democrat"))/ConcDEM*100
+
+print("*********")
+
+print("how many of all critical items involving party discordant (OBAMA) were ACCEPTED, AS DIRECT (TRUE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat" & explicit == "Accept as True"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat" & explicit == "Accept as True"))/DisDEM*100
+
+print("how many of all critical items involving party discordant (OBAMA) were ACCEPTED, AS INDIRECT (FALSE) BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat" & explicit == "Reject as False"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat" & explicit == "Reject as False"))/DisDEM*100
+
+print("how many of all critical items involving party discordant (OBAMA) were ACCEPTED, either DIRECT OR INDIRECT BY DEMOCRATS?")
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "BO" & endorse == "C" & poliID2 == "Democrat"))/DisDEM*100
+
+print("*********")
+
+print("how many of these general conspiracy items were ACCEPTED by Democrats?")
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Democrat"))
+nrow(filter(d2,condition=="CRIT" & topic == "GC" & endorse == "C" & poliID2 == "Democrat"))/GCDEM*100
+
+```
+
+
+
