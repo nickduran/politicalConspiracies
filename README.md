@@ -6,7 +6,7 @@ R Notebook tutorials of statistical procedures, including all R code, used to co
 Data (deidentified):
 ===================
 
-1) Complete data set that contains all variables necessary for replicating reported analyses and descriptives. 
+Complete data set that contains all variables necessary for replicating reported analyses and descriptives. 
 
 > **Relevant File:**
 > - Mouse-Traj-2GIT.csv
