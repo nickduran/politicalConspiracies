@@ -1,7 +1,7 @@
 The Hidden Appeal and Aversion to Political Conspiracies as Revealed in the Response Dynamics of Partisans (Journal of Experimental and Social Psychology)
 ===================
 
-R Notebook tutorials of statistical procedures, including all R code, used to conduct analyses reported in Duran, Nicholson, and Dale (accepted, JESP). Also included is the complete dataset used to perform statistical tests and to derive descriptives. 
+R Notebook tutorials of statistical procedures, including all R code, used to conduct analyses reported in Duran, Nicholson, and Dale (2017). Also included is the complete dataset used to perform statistical tests and to derive descriptives. 
 
 Data (deidentified):
 ===================
